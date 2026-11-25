@@ -2,13 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Trainer extends Model
 {
-    protected $table = 'trainers';
+    use HasFactory;
 
-    protected $fillable = ['nombre', 'apellido'];
-
-    public $timestamps = false;
+    protected $fillable = ['nombre', 'apellido', 'foto'];
 }

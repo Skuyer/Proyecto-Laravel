@@ -21,31 +21,41 @@
     </div>
 </form>
 
-<table class="table table-bordered table-striped bg-white">
-    <thead>
-        <tr><th>ID</th><th>Nombre</th><th>Apellido</th><th width="180">Acciones</th></tr>
-    </thead>
-    <tbody>
-        @forelse($trainers as $t)
-        <tr>
-            <td>{{ $t->id }}</td>
-            <td>{{ $t->nombre }}</td>
-            <td>{{ $t->apellido }}</td>
-            <td>
-                <a href="{{ route('trainers.edit', $t) }}" class="btn btn-sm btn-warning">Editar</a>
-                <form action="{{ route('trainers.destroy', $t) }}" method="POST" class="d-inline"
-                      onsubmit="return confirm('¿Eliminar este trainer?')">
-                    @csrf
-                    @method('DELETE')
-                    <button class="btn btn-sm btn-danger">Eliminar</button>
-                </form>
-            </td>
-        </tr>
-        @empty
-        <tr><td colspan="4" class="text-center">No se encontraron registros</td></tr>
-        @endforelse
-    </tbody>
-</table>
+<div class="row g-3 mb-3">
+    @forelse($trainers as $t)
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="card shadow-sm h-100">
+            <div class="row g-0 align-items-center h-100">
+                <div class="col-4 text-center p-3">
+                    <img src="{{ $t->foto ? asset('storage/'.$t->foto) : asset('images/sin-foto.png') }}"
+                         alt="Foto de {{ $t->nombre }}"
+                         class="rounded-circle"
+                         style="width:90px;height:90px;object-fit:cover;">
+                </div>
+                <div class="col-8">
+                    <div class="card-body">
+                        <small class="text-muted">ID: {{ $t->id }}</small>
+                        <h5 class="card-title mb-1">{{ $t->nombre }} {{ $t->apellido }}</h5>
+                        <div class="mt-2">
+                            <a href="{{ route('trainers.edit', $t) }}" class="btn btn-sm btn-warning">Editar</a>
+                            <form action="{{ route('trainers.destroy', $t) }}" method="POST" class="d-inline"
+                                  onsubmit="return confirm('¿Eliminar este trainer?')">
+                                @csrf
+                                @method('DELETE')
+                                <button class="btn btn-sm btn-danger">Eliminar</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @empty
+    <div class="col-12">
+        <div class="alert alert-light text-center">No se encontraron registros</div>
+    </div>
+    @endforelse
+</div>
 
 {{ $trainers->links() }}
 @endsection

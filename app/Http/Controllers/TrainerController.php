@@ -6,6 +6,7 @@ use App\Exports\TrainersExport;
 use App\Models\Trainer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 
 class TrainerController extends Controller
@@ -24,14 +25,6 @@ class TrainerController extends Controller
             ->orderBy('id', 'desc');
     }
 
-    private function validar(Request $request): array
-    {
-        return $request->validate([
-            'nombre'   => 'required|string|max:100',
-            'apellido' => 'nullable|string|max:100',
-        ]);
-    }
-
     public function index(Request $request)
     {
         $trainers = $this->consulta($request)->paginate(10)->withQueryString();
@@ -45,8 +38,18 @@ class TrainerController extends Controller
 
     public function store(Request $request)
     {
-        Trainer::create($this->validar($request));
-        return redirect()->route('trainers.index')->with('ok', 'Trainer creado correctamente');
+        $data = $request->validate([
+            'nombre'   => 'required|string|max:255',
+            'apellido' => 'required|string|max:255',
+            'foto'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
+        if ($request->hasFile('foto')) {
+            $data['foto'] = $request->file('foto')->store('trainers', 'public');
+        }
+
+        Trainer::create($data);
+        return redirect()->route('trainers.index')->with('success', 'Trainer creado');
     }
 
     public function edit(Trainer $trainer)
@@ -56,23 +59,39 @@ class TrainerController extends Controller
 
     public function update(Request $request, Trainer $trainer)
     {
-        $trainer->update($this->validar($request));
-        return redirect()->route('trainers.index')->with('ok', 'Trainer actualizado correctamente');
+        $data = $request->validate([
+            'nombre'   => 'required|string|max:255',
+            'apellido' => 'required|string|max:255',
+            'foto'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
+        if ($request->hasFile('foto')) {
+            if ($trainer->foto) {
+                Storage::disk('public')->delete($trainer->foto); // borra la anterior
+            }
+            $data['foto'] = $request->file('foto')->store('trainers', 'public');
+        }
+
+        $trainer->update($data);
+        return redirect()->route('trainers.index')->with('success', 'Trainer actualizado');
     }
 
     public function destroy(Trainer $trainer)
     {
+        if ($trainer->foto) {
+            Storage::disk('public')->delete($trainer->foto);
+        }
         $trainer->delete();
-        return redirect()->route('trainers.index')->with('ok', 'Trainer eliminado correctamente');
+        return redirect()->route('trainers.index');
     }
 
-    public function exportPdf(Request $request)
+    public function pdf(Request $request)
     {
         $trainers = $this->consulta($request)->get();
         return Pdf::loadView('trainers.pdf', compact('trainers'))->download('trainers.pdf');
     }
 
-    public function exportExcel(Request $request)
+    public function excel(Request $request)
     {
         return Excel::download(new TrainersExport($this->consulta($request)), 'trainers.xlsx');
     }
